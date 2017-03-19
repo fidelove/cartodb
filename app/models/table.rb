@@ -1086,6 +1086,12 @@ class Table
     }).all
   end
 
+  def self.get_existing_tables_for_user(table_schema, connection)
+    connection.fetch(%Q{ SELECT table_name FROM information_schema.tables WHERE table_schema= ?},
+                              table_schema
+    ).all
+  end
+
   def create_index(column, prefix = '', concurrent: false)
     concurrently = concurrent ? 'CONCURRENTLY' : ''
     owner.in_database.execute(%{CREATE INDEX #{concurrently} "#{index_name(column, prefix)}" ON "#{name}"("#{column}")})

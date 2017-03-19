@@ -499,13 +499,46 @@ describe Carto::Api::OrganizationUsersController do
     it 'should delete users' do
       login(@organization.owner)
 
-      user_to_be_deleted = @organization.non_owner_users[0]
+      user_to_be_deleted = @helper.create_test_user(unique_name('user'), @organization)
+
       delete api_v2_organization_users_delete_url(id_or_name: @organization.name,
                                                   u_username: user_to_be_deleted.username)
 
       last_response.status.should eq 200
 
       User[user_to_be_deleted.id].should be_nil
+    end
+
+    it 'should delete users with force true' do
+      login(@organization.owner)
+
+      user_to_be_deleted = @helper.create_test_user(unique_name('user'), @organization)
+      params = { force: true }
+
+      Table.stubs(:get_existing_tables_for_user).returns(['depending_table'])
+
+      delete api_v2_organization_users_delete_url(id_or_name: @organization.name,
+                                                  u_username: user_to_be_deleted.username), params
+
+      last_response.status.should eq 200
+
+      User[user_to_be_deleted.id].should be_nil
+    end
+
+    it 'should not delete users with error 409 with force false' do
+      login(@organization.owner)
+
+      user_to_be_deleted = @helper.create_test_user(unique_name('user'), @organization)
+      params = { force: false}
+
+      Table.stubs(:get_existing_tables_for_user).returns(['depending_table'])
+
+      delete api_v2_organization_users_delete_url(id_or_name: @organization.name,
+                                                  u_username: user_to_be_deleted.username), params
+
+      last_response.status.should eq 409
+
+      User[user_to_be_deleted.id].should_not be_nil
     end
 
     it 'should not allow to delete the org owner' do

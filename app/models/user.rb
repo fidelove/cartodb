@@ -335,6 +335,10 @@ class User < Sequel::Model
     shared_entities.any?
   end
 
+  def has_dependent_objects?
+    (Table.get_existing_tables_for_user(username, self.in_database(as: :superuser)) - tables.all.map { |t| t.name}).any?
+  end
+
   def before_destroy
     # A viewer can't destroy data, this allows the cleanup. Down to dataset level
     # to skip model hooks.

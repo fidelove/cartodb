@@ -117,9 +117,12 @@ module Carto
       def destroy
         render_jsonp("Can't delete org owner", 401) && return if @organization.owner_id == @user.id
 
-        unless @user.can_delete
-          render_jsonp "Can't delete @user. #{'Has shared entities' if @user.has_shared_entities?}", 410
-        end
+        render_jsonp("Can't delete @user. #{'Has shared entities' if @user.has_shared_entities?}", 410) && return unless @user.can_delete
+
+        # TUs send strings, but API calls send booleans
+        force = destroy_params[:force].to_s == "true" || false
+
+        render_jsonp("Can't delete @user, because ther objects depend on it. Use force = true", 409) && return if (!force && @user.has_dependent_objects?)
 
         @user.destroy
         @user.delete_in_central
@@ -156,6 +159,10 @@ module Carto
       # TODO: Use native strong params when in Rails 4+
       def update_params
         @update_params ||= permit(COMMON_MUTABLE_ATTRIBUTES)
+      end
+
+      def destroy_params
+        @destroy_params ||= permit(:force)
       end
     end
   end
