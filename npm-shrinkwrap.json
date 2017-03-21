@@ -1151,13 +1151,13 @@
     },
     "cartodb-deep-insights.js": {
       "version": "0.0.2",
-      "from": "cartodb/deep-insights.js#master",
-      "resolved": "git://github.com/cartodb/deep-insights.js.git#9c2653063445a0bf9811fc087f63561831af2472",
+      "from": "cartodb/deep-insights.js#leaflet-1.0.3",
+      "resolved": "git://github.com/cartodb/deep-insights.js.git#28a44ade16f5f24e9c3bcbc9e6e291ff8e8df966",
       "dependencies": {
         "cartodb.js": {
           "version": "4.0.0-alpha.1",
-          "from": "cartodb/cartodb.js#v4",
-          "resolved": "git://github.com/cartodb/cartodb.js.git#11eea61ea7bc849da721356cf76c4e5039dfa830",
+          "from": "cartodb/cartodb.js#leaflet-migration-2",
+          "resolved": "git://github.com/cartodb/cartodb.js.git#686935df9892ae4190982cf9f4e41402f2685271",
           "dependencies": {
             "backbone-poller": {
               "version": "1.1.3",
@@ -1392,9 +1392,9 @@
               }
             },
             "leaflet": {
-              "version": "0.7.3",
-              "from": "leaflet@0.7.3",
-              "resolved": "https://registry.npmjs.org/leaflet/-/leaflet-0.7.3.tgz"
+              "version": "1.0.3",
+              "from": "leaflet@1.0.3",
+              "resolved": "https://registry.npmjs.org/leaflet/-/leaflet-1.0.3.tgz"
             },
             "mustache": {
               "version": "1.1.0",
