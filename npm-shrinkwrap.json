@@ -2174,8 +2174,8 @@
     },
     "torque.js": {
       "version": "2.16.3",
-      "from": "cartodb/torque#master",
-      "resolved": "git://github.com/cartodb/torque.git#771c92fb2f97a481e62a8f9ef42f205e4b8b6b70",
+      "from": "cartodb/torque#leaflet-migration",
+      "resolved": "git://github.com/cartodb/torque.git#3752aacf33ef3d0f0ae29a51c5f42c64301730be",
       "dependencies": {
         "carto": {
           "version": "0.15.1-cdb3",
