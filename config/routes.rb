@@ -405,17 +405,17 @@ CartoDB::Application.routes.draw do
     get '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id/users' => 'organizations#users', as: :api_v1_organization_users, constraints: { id: /[^\/]+/ }
 
     # Groups
-    get '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:organization_id/groups' => 'groups#index', as: :api_v1_organization_groups, constraints: { organization_id: /[^\/]+/ }
-    get '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:organization_id/groups/:group_id' => 'groups#show', as: :api_v1_organization_groups_show, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
-    post '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:organization_id/groups' => 'groups#create', as: :api_v1_organization_groups_create, constraints: { organization_id: /[^\/]+/ }
-    put '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:organization_id/groups/:group_id' => 'groups#update', as: :api_v1_organization_groups_update, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
-    delete '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:organization_id/groups/:group_id' => 'groups#destroy', as: :api_v1_organization_groups_destroy, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
+    get '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id_or_name/groups' => 'groups#index_paging', as: :api_v1_organization_groups, constraints: { organization_id: /[^\/]+/ }
+    get '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id_or_name/groups/:group_id_or_name' => 'groups#show', as: :api_v1_organization_groups_show, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
+    post '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id_or_name/groups' => 'groups#create', as: :api_v1_organization_groups_create, constraints: { organization_id: /[^\/]+/ }
+    put '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id_or_name/groups/:group_id_or_name' => 'groups#update', as: :api_v1_organization_groups_update, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
+    delete '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id_or_name/groups/:group_id_or_name' => 'groups#destroy', as: :api_v1_organization_groups_destroy, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
 
-    get '(/user/:user_domain)(/u/:user_domain)/api/v1/users/:user_id/groups' => 'groups#index', as: :api_v1_user_groups, constraints: { user_id: /[^\/]+/ }
+    get '(/user/:user_domain)(/u/:user_domain)/api/v1/users/:user_id/groups' => 'groups#index_paging', as: :api_v1_user_groups, constraints: { user_id: /[^\/]+/ }
 
-    get '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id/groups/:group_id/users' => 'organizations#users', as: :api_v1_organization_groups_users, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
-    post '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:organization_id/groups/:group_id/users' => 'groups#add_users', as: :api_v1_organization_groups_add_users, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
-    delete '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:organization_id/groups/:group_id/users(/:user_id)' => 'groups#remove_users', as: :api_v1_organization_groups_remove_users, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ , user_id: /[^\/]+/ }
+    get '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id/groups/:group_id_or_name/users' => 'organizations#users', as: :api_v1_organization_groups_users, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
+    post '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id_or_name/groups/:group_id_or_name/users' => 'groups#add_users', as: :api_v1_organization_groups_add_users, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ }
+    delete '(/user/:user_domain)(/u/:user_domain)/api/v1/organization/:id_or_name/groups/:group_id_or_name/users(/:user_id)' => 'groups#remove_users', as: :api_v1_organization_groups_remove_users, constraints: { organization_id: /[^\/]+/, group_id: /[^\/]+/ , user_id: /[^\/]+/ }
 
     # Databases (organization) groups
     # Note: url doesn't contain org_id because this needs to be triggered from the SQL API
@@ -602,8 +602,8 @@ CartoDB::Application.routes.draw do
 
       resources :organizations, only: [] do
         resources :notifications, only: [:create, :destroy],
-                                  controller: :organization_notifications,
-                                  constraints: { id: UUID_REGEXP }
+                  controller: :organization_notifications,
+                  constraints: { id: UUID_REGEXP }
       end
     end
 
@@ -617,6 +617,16 @@ CartoDB::Application.routes.draw do
         get    'users/:u_username', to: 'organization_users#show',    as: :api_v2_organization_users_show
         delete 'users/:u_username', to: 'organization_users#destroy', as: :api_v2_organization_users_delete
         put    'users/:u_username', to: 'organization_users#update',  as: :api_v2_organization_users_update
+      end
+
+      # EUMAPI groups
+      scope 'organization/:id_or_name/' do
+        get    'groups', to: 'groups#index',      as: :api_v2_organization_groups
+        get    'groups/:group_id_or_name', to: 'groups#show', as: :api_v2_organization_groups_show
+        post   'groups', to: 'groups#create', as: :api_v2_organization_groups_create
+        put    'groups/:group_id_or_name', to: 'groups#update', as: :api_v2_organization_groups_update
+        delete 'groups/:group_id_or_name', to: 'groups#destroy', as: :api_v2_organization_groups_destroy
+
       end
     end
 
@@ -633,10 +643,10 @@ CartoDB::Application.routes.draw do
 
       # EUMAPI
       scope 'organization/:id_or_name/' do
-        post   'users',             to: 'organization_users#create',  as: :api_v1_organization_users_create
-        get    'users/:u_username', to: 'organization_users#show',    as: :api_v1_organization_users_show
-        delete 'users/:u_username', to: 'organization_users#destroy', as: :api_v1_organization_users_delete
-        put    'users/:u_username', to: 'organization_users#update',  as: :api_v1_organization_users_update
+        post   'users',                    to: 'organization_users#create',  as: :api_v1_organization_users_create
+        get    'users/:u_username',        to: 'organization_users#show',    as: :api_v1_organization_users_show
+        delete 'users/:u_username',        to: 'organization_users#destroy', as: :api_v1_organization_users_delete
+        put    'users/:u_username',        to: 'organization_users#update',  as: :api_v1_organization_users_update
       end
 
       # Overlays

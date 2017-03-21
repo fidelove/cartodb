@@ -2,25 +2,34 @@
 
 require_relative 'paged_searcher'
 require_dependency 'cartodb/errors'
+require_dependency 'carto/uuidhelper'
 
 module Carto
   module Api
 
     class GroupsController < ::Api::ApplicationController
-      include PagedSearcher
+      include PagedSearcher, Carto::UUIDHelper
 
-      ssl_required :index, :show, :create, :update, :destroy, :add_users, :remove_users
+      ssl_required :index, :index_paging, :show, :create, :update, :destroy, :add_users, :remove_users
 
-      before_filter :load_fetching_options, :only => [:show, :index]
+      before_filter :load_fetching_options, :only => [:show, :index, :index_paging]
       before_filter :load_organization
       before_filter :load_user
       before_filter :validate_organization_or_user_loaded
       before_filter :load_group, :only => [:show, :update, :destroy, :add_users, :remove_users]
       before_filter :org_owner_only, :only => [:create, :update, :destroy, :add_users, :remove_users]
-      before_filter :org_users_only, :only => [:show, :index]
+      before_filter :org_users_only, :only => [:show, :index, :index_paging]
       before_filter :load_organization_users, :only => [:add_users, :remove_users]
 
       def index
+
+        groups = @user ? @user.groups : @organization.groups
+        groups = groups.where('name ilike ?', "%#{params[:q]}%") if params[:q]
+
+        render_jsonp({groups: groups.map { |g| Carto::Api::GroupPresenter.new(g, @fetching_options).to_poro }}, 200)
+      end
+
+      def index_paging
         page, per_page, order = page_per_page_order_params
 
         groups = @user ? @user.groups : @organization.groups
@@ -30,10 +39,11 @@ module Carto
         groups = Carto::PagedModel.paged_association(groups, page, per_page, order)
 
         render_jsonp({
-          groups: groups.map { |g| Carto::Api::GroupPresenter.new(g, @fetching_options).to_poro },
-          total_entries: total_entries
-        }, 200)
+                         groups: groups.map { |g| Carto::Api::GroupPresenter.new(g, @fetching_options).to_poro },
+                         total_entries: total_entries
+                     }, 200)
       end
+
 
       def show
         render_jsonp(Carto::Api::GroupPresenter.new(@group, @fetching_options).to_poro, 200)
@@ -76,6 +86,7 @@ module Carto
       end
 
       def add_users
+        puts "#{@organization_users}"
         @group.add_users_with_extension(@organization_users)
         render json: {}, status: 200
       rescue ActiveRecord::StatementInvalid => e
@@ -106,8 +117,11 @@ module Carto
       end
 
       def load_organization
-        return unless params['organization_id'].present?
-        @organization = Carto::Organization.where(id: params['organization_id']).first
+        id_or_name = params[:id_or_name]
+        return unless id_or_name
+
+        @organization = Carto::Organization.where(is_uuid?(id_or_name) ? { id: id_or_name } : { name: id_or_name }).first
+
         render json: { errors: ["Org. #{params['organization_id']} not found"] }, status: 404 unless @organization
       end
 
@@ -143,7 +157,8 @@ module Carto
       end
 
       def load_group
-        @group = @organization.groups.where(id: params['group_id']).first
+        id_or_name = params[:group_id_or_name]
+        @group = @organization.groups.where(is_uuid?(id_or_name) ? { id: id_or_name } : { name: id_or_name }).first
         render json: { errors: ["Group #{params['group_id']} not found"] }, status: 404 unless @group
       end
 
